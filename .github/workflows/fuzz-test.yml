@@ -27,7 +27,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: List Testing Directory Contents
-      run: ls -l ${{github.workspace}}/build/Testing/
+      run: ls -l ${{github.workspace}}/build/Testing/Output
 
     - name: Prepare Fuzzing Inputs
       run: |
@@ -38,7 +38,7 @@ jobs:
       run: |
         export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
         timestamp=$(date +%s)  # Get the current timestamp
-        for binary in ${{github.workspace}}/build/Testing/*; do
+        for binary in ${{github.workspace}}/build/Testing/Output/*; do
           if [ -x "$binary" ]; then
             fuzzer_id=$(basename "$binary")
             output_dir="${{github.workspace}}/fuzz_outputs/${fuzzer_id}_${timestamp}"
@@ -49,7 +49,7 @@ jobs:
         wait
 
     - name: Upload Fuzzing Outputs as Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fuzz-outputs
         path: ${{github.workspace}}/fuzz_outputs/**
