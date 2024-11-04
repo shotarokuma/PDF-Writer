@@ -26,27 +26,14 @@ jobs:
     - name: Build with CMake
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: List Testing Directory Contents
-      run: ls -R ${{github.workspace}}/build
-
     - name: Prepare Fuzzing Inputs
       run: |
         mkdir -p ${{github.workspace}}/fuzz_inputs
         echo "seed_input" > ${{github.workspace}}/fuzz_inputs/seed.txt
 
-    - name: Run AFL++ Fuzzer for Testing Binaries
+    - name: Run AFL++ Fuzzer
       run: |
-        export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
-        timestamp=$(date +%s)  # Get the current timestamp
-        for binary in ${{github.workspace}}/build/*; do
-          if [ -x "$binary" ]; then
-            fuzzer_id=$(basename "$binary")
-            output_dir="${{github.workspace}}/fuzz_outputs/${fuzzer_id}_${timestamp}"
-            mkdir -p "$output_dir"
-            afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o "$output_dir" -- "$binary" @@ &
-          fi
-        done
-        wait
+          afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriter/PDFWriterTesting @@
 
     - name: Upload Fuzzing Outputs as Artifacts
       uses: actions/upload-artifact@v4
