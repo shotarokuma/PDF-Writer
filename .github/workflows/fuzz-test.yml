@@ -32,6 +32,8 @@ jobs:
         echo "seed_input" > ${{github.workspace}}/fuzz_inputs/seed.txt
 
     - name: Run AFL++ Fuzzer
+      env:
+        AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
       run: |
           afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@
 
