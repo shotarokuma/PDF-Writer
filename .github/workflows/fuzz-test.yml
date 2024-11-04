@@ -35,7 +35,7 @@ jobs:
       run: |
           export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
           for binary in ${{github.workspace}}/build/*; do
-            if [ -x "$binary" ];
+            if [ -x "$binary" ]; then
               afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- "$binary" @@ &
             fi
           done
