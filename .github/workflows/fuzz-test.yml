@@ -18,13 +18,17 @@ jobs:
     - name: Install AFL++
       run: |
         sudo apt-get update
-        sudo apt-get install -y afl++ afl++-clang afl++-doc
+        sudo apt-get install -y afl++
 
-    - name: Configure CMake for AFL++
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DAFL_FUZZING=ON
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build with CMake
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Check for Target Binaries
+      run: |
+        ls -l ${{github.workspace}}/build/
 
     - name: Prepare Fuzzing Inputs
       run: |
@@ -33,16 +37,18 @@ jobs:
 
     - name: Run AFL++ Fuzzer for All Binaries
       run: |
-          export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
-          for binary in ${{github.workspace}}/build/*; do
-            if [ -x "$binary" ]; then
-              afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- "$binary" @@ &
-            fi
-          done
-          wait
+        export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+        for binary in ${{github.workspace}}/build/*; do
+          if [ -x "$binary" ]; then
+            fuzzer_id=$(basename "$binary")
+            afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs/"$fuzzer_id" -- "$binary" @@ &
+          fi
+        done
+        wait
 
     - name: Upload Fuzzing Outputs as Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: fuzz-outputs
-        path: ${{github.workspace}}/fuzz_outputs
+        path: ${{github.workspace}}/fuzz_outputs/**
+      
