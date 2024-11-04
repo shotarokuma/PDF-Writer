@@ -33,7 +33,7 @@ jobs:
 
     - name: Run AFL++ Fuzzer
       run: |
-          afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriter/PDFWriterTesting @@
+          afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@
 
     - name: Upload Fuzzing Outputs as Artifacts
       uses: actions/upload-artifact@v4
