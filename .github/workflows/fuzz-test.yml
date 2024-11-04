@@ -26,29 +26,30 @@ jobs:
     - name: Build with CMake
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Check for Target Binaries
-      run: |
-        ls -l ${{github.workspace}}/build/
+    - name: List Testing Directory Contents
+      run: ls -l ${{github.workspace}}/build/Testing/
 
     - name: Prepare Fuzzing Inputs
       run: |
         mkdir -p ${{github.workspace}}/fuzz_inputs
         echo "seed_input" > ${{github.workspace}}/fuzz_inputs/seed.txt
 
-    - name: Run AFL++ Fuzzer for All Binaries
+    - name: Run AFL++ Fuzzer for Testing Binaries
       run: |
         export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
-        for binary in ${{github.workspace}}/build/*; do
+        timestamp=$(date +%s)  # Get the current timestamp
+        for binary in ${{github.workspace}}/build/Testing/*; do
           if [ -x "$binary" ]; then
             fuzzer_id=$(basename "$binary")
-            afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs/"$fuzzer_id" -- "$binary" @@ &
+            output_dir="${{github.workspace}}/fuzz_outputs/${fuzzer_id}_${timestamp}"
+            mkdir -p "$output_dir"
+            afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o "$output_dir" -- "$binary" @@ &
           fi
         done
         wait
 
     - name: Upload Fuzzing Outputs as Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: fuzz-outputs
         path: ${{github.workspace}}/fuzz_outputs/**
-      
