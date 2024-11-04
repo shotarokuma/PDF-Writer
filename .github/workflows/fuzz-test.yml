@@ -1,0 +1,38 @@
+name: Fuzz Test
+
+on:
+  push:
+    branches: master
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  fuzz-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Configure CMake for AFL++
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DAFL_FUZZING=ON ${{ matrix.extra_cmake_config_flags}}
+
+    - name: Build with CMake
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Prepare Fuzzing Inputs
+      run: |
+        mkdir -p ${{github.workspace}}/fuzz_inputs
+        # Add seed files to fuzz_inputs if necessary
+        echo "seed_input" > ${{github.workspace}}/fuzz_inputs/seed.txt
+
+    - name: Run AFL++ Fuzzer
+      run: |
+        afl-fuzz -i ${{github.workspace}}/fuzz_inputs -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/your_target_binary @@
+
+    - name: Upload Fuzzing Outputs as Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: fuzz-outputs
+        path: ${{github.workspace}}/fuzz_outputs
