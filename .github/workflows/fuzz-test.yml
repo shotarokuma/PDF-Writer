@@ -8,32 +8,56 @@ env:
   BUILD_TYPE: Release
 
 jobs:
+  fuzz-test-master:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install AFL++
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y afl++
+
+      - name: Configure CMake
+        run: CC=afl-clang-fast CXX=afl-clang-fast++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build with CMake
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
   fuzz-test:
     runs-on: ubuntu-latest
-
+    needs: fuzz-test-master
+    strategy:
+      matrix:
+        worker: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Install AFL++
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y afl++
+      - name: Install AFL++
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y afl++
 
-    - name: Configure CMake
-      run: CC=afl-clang-fast CXX=afl-clang-fast++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      - name: Run AFL++ Fuzzer
+        env:
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+        run: |
+          afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
 
-    - name: Build with CMake
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Run AFL++ Fuzzer Worker
+        env:
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+        run: |
+          afl-fuzz -S worker${{ matrix.worker }} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@
 
-    - name: Run AFL++ Fuzzer
-      env:
-        AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
-      run: |
-          afl-fuzz -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@
-
-    - name: Upload Fuzzing Outputs as Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: fuzz-outputs
-        path: ${{github.workspace}}/fuzz_outputs/**
+  upload-fuzzing-results:
+    runs-on: ubuntu-latest
+    needs: fuzz-test
+    steps:
+      - name: Upload Fuzzing Outputs as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-outputs
+          path: ${{github.workspace}}/fuzz_outputs/
