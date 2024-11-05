@@ -10,9 +10,6 @@ env:
 jobs:
   fuzz-test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        worker: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -28,21 +25,17 @@ jobs:
       - name: Build with CMake
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-      - name: Run AFL++ Fuzzer
-        env:
-            AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
-        run: |
-            afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
-
       - name: Run AFL++ Fuzzer with Workers
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
             afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
           
-            for worker in ${{ matrix.worker }}; do
+            for worker in {1..5}; do
                 afl-fuzz -S worker${worker} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
             done
+
+            wait
       
       - name: Upload Fuzzing Outputs as Artifacts
         uses: actions/upload-artifact@v4
