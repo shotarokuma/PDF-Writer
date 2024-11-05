@@ -8,8 +8,11 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  fuzz-test-master:
+  fuzz-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        worker: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -25,39 +28,22 @@ jobs:
       - name: Build with CMake
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-  fuzz-test:
-    runs-on: ubuntu-latest
-    needs: fuzz-test-master
-    strategy:
-      matrix:
-        worker: [1, 2, 3, 4, 5]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install AFL++
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y afl++
-
       - name: Run AFL++ Fuzzer
         env:
             AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
             afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
 
-      - name: Run AFL++ Fuzzer Worker
+      - name: Run AFL++ Fuzzer with Workers
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
-          for worker in ${{ matrix.worker }}; do
-            afl-fuzz -S worker${worker} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
-          done
-
-  upload-fuzzing-results:
-    runs-on: ubuntu-latest
-    needs: fuzz-test
-    steps:
+            afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
+          
+            for worker in ${{ matrix.worker }}; do
+                afl-fuzz -S worker${worker} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
+            done
+      
       - name: Upload Fuzzing Outputs as Artifacts
         uses: actions/upload-artifact@v4
         with:
