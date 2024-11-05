@@ -30,7 +30,7 @@ jobs:
     needs: fuzz-test-master
     strategy:
       matrix:
-        worker: [1, 2, 3, 4, 5, 6, 7, 8]
+        worker: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -42,15 +42,17 @@ jobs:
 
       - name: Run AFL++ Fuzzer
         env:
-          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+            AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
-          afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
+            afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
 
       - name: Run AFL++ Fuzzer Worker
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
-          afl-fuzz -S worker${{ matrix.worker }} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@
+          for worker in ${{ matrix.worker }}; do
+            afl-fuzz -S worker${worker} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
+          done
 
   upload-fuzzing-results:
     runs-on: ubuntu-latest
