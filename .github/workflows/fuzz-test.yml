@@ -21,13 +21,13 @@ jobs:
 
       - name: Pull AFL++ Docker Image
         run: docker pull aflplusplus/aflplusplus:latest
-
+    
       - name: Configure and Build with AFL++
         run: |
           docker run -v ${{ github.workspace }}:/src -w /src aflplusplus/aflplusplus:latest /bin/bash -c "
-            mkdir -p build && cd build
-            CC=/AFLplusplus/afl-clang-fast CXX=/AFLplusplus/afl-clang-fast++ cmake ..
-            cmake --build .
+             mkdir -p build
+            CC=afl-clang-fast CXX=afl-clang-fast++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+            cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
           "
 
       - name: Build with CMake
