@@ -38,9 +38,9 @@ jobs:
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 0
         run: |
-            afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -t 5000 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
+            afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -L 0 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
 
-            afl-fuzz -S worker1 -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -t 5000 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
+            afl-fuzz -S worker1 -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -L 0 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
 
             wait
       
