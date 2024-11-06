@@ -14,13 +14,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install AFL++
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y afl++
+          sudo apt-get install -y build-essential clang llvm git
+
+      - name: Install AFL++
+        run: |
+          mkdir -p ~/afl
+          cd ~/afl
+          git clone https://github.com/AFLplusplus/AFLplusplus
+          cd AFLplusplus
+          make distrib
+          sudo make install
 
       - name: Configure CMake
-        run: CC=afl-clang-fast CXX=afl-clang-fast++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        run: CC=~/afl/AFLplusplus/afl-clang-fast CXX=~/afl/AFLplusplus/afl-clang-fast++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
       - name: Build with CMake
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
@@ -28,8 +37,6 @@ jobs:
       - name: Run AFL++ Fuzzer with Workers
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
-          AFL_NO_NEW_PATHS_TIMEOUT: 18000
-          AFL_EXIT_ON_TIME: 18000
         run: |
             afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -t 5000 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
 
