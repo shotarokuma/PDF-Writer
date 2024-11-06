@@ -29,10 +29,10 @@ jobs:
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
-            afl-fuzz -M master -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
+            afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
           
             for worker in {1..5}; do
-                afl-fuzz -S worker${worker} -i ${{github.workspace}}/PDFWriterTesting/Materials -o ${{github.workspace}}/fuzz_outputs -- ${{github.workspace}}/build/PDFWriterTesting/PDFWriterTesting @@ &
+               afl-fuzz -S worker${worker} -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
             done
 
             wait

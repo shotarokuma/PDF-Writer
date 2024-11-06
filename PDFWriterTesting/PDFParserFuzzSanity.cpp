@@ -2,31 +2,28 @@
 #include "InputFile.h"
 #include "Trace.h"
 
-#include "testing/TestIO.h"
-
 #include <iostream>
+#include <string>
 
 using namespace std;
 using namespace PDFHummus;
 
-int PDFParserFuzzSanity(int argc, char* argv[]) {
+int PDFParserFuzzSanity(const std::string& inputPath, const std::string& outputPath) {
     PDFParser parser;
     InputFile pdfFile;
 
-    std::string path = argv[3];
-
-    EStatusCode status = pdfFile.OpenFile(path);
-    if(status != PDFHummus::eSuccess)
-    {
-        cout<<"unable to open file for reading, Path:"<<path.c_str()<<"\n";
+    EStatusCode status = pdfFile.OpenFile(inputPath);
+    if (status != PDFHummus::eSuccess) {
+        cout << "Unable to open file for reading, Path: " << inputPath << "\n";
         return 1;
     }
 
-    // traces on
-    Trace::DefaultTrace().SetLogSettings(BuildRelativeOutputPath(argv,  argv[4]), true, true);
+    // Set trace settings with the output file path
+    Trace::DefaultTrace().SetLogSettings(outputPath, true, true);
 
-    // checks that returns, status doesn't matter
+    // Start parsing the PDF file
     parser.StartPDFParsing(pdfFile.GetInputStream());
 
+    pdfFile.CloseFile();
     return status;
 }
