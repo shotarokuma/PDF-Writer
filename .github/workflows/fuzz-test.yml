@@ -2,7 +2,7 @@ name: Fuzz Test
 
 on:
   push:
-    branches: master
+    branches: tmp
 
 env:
   BUILD_TYPE: Release
@@ -36,7 +36,7 @@ jobs:
 
       - name: Run AFL++ Fuzzer with Workers
         env:
-          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 0
         run: |
             afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -t 5000 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
 
