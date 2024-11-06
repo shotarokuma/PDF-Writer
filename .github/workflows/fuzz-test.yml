@@ -30,10 +30,8 @@ jobs:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
             afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
-          
-            for worker in {1..5}; do
-               afl-fuzz -S worker${worker} -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
-            done
+
+            afl-fuzz -S worker1 -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
 
             wait
       
