@@ -30,9 +30,6 @@ jobs:
             cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
           "
 
-      - name: Build with CMake
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
       - name: Run AFL++ Fuzzer with Workers
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
