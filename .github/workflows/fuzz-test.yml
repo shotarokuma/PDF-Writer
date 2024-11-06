@@ -31,9 +31,8 @@ jobs:
           "
 
       - name: Run AFL++ Fuzzer with Workers
-        env:
-          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
         run: |
+            mkdir ${{ github.workspace }}/fuzz_outputs
             docker run -v ${{ github.workspace }}:/src -w /src aflplusplus/aflplusplus:latest /bin/bash -c "
               afl-fuzz -M master -i ${{ github.workspace }}/PDFWriterTesting/Materials -o ${{ github.workspace }}/fuzz_outputs -t 5000 -- ${{ github.workspace }}/build/PDFWriterTesting/PDFWriterTesting ${{ github.workspace }}/PDFWriterTesting/Materials/ ${{ github.workspace }}/build/Testing/Output @@ &
 
