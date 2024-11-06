@@ -29,6 +29,7 @@ jobs:
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           AFL_NO_NEW_PATHS_TIMEOUT: 18000
+          AFL_EXIT_ON_TIME: 18000
         run: |
             afl-fuzz -M master -i ./PDFWriterTesting/Materials -o ./fuzz_outputs -t 5000 -- ./build/PDFWriterTesting/PDFWriterTesting ./PDFWriterTesting/Materials/ ./build/Testing/Output @@ &
 
